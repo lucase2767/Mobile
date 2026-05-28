@@ -10,9 +10,5 @@ env/
 __pycache__/
 *.pyc
 
-# Bancos de dados locais (SQLite)
-*.db
-*.sqlite3
-
 # Arquivos do sistema
 .DS_Store
