@@ -2,7 +2,6 @@ import os
 import json
 import contextlib
 import requests
-from serpapi import GoogleSearch
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from fastapi import FastAPI, HTTPException, status
@@ -58,17 +57,21 @@ def root(): return {"mensagem": "API Cuidados de Costura está Online no Render!
 
 def buscar_imagem_serpapi(modelo_maquina: str) -> Optional[str]:
     try:
-        params = {
-            "engine": "google_images",
-            "q": f"Máquina de costura industrial {modelo_maquina}",
-            "hl": "pt",
-            "gl": "br",
-            "ijn": "0",
-            "api_key": SERPAPI_KEY
-        }
-        search = GoogleSearch(params)
-        results = search.get_dict()
-        images = results.get("images_results", [])
+        response = requests.get(
+            "https://serpapi.com/search",
+            params={
+                "engine": "google_images",
+                "q": f"Máquina de costura industrial {modelo_maquina}",
+                "hl": "pt",
+                "gl": "br",
+                "image_type": "photo",
+                "imgsz": "m",
+                "api_key": SERPAPI_KEY
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        images = data.get("images_results", [])
 
         if images:
             return images[0]["original"]
