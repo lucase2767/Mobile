@@ -13,21 +13,21 @@ export interface MachineOilInfo {
   observacoes: string;
 }
 
-export async function getMachineOilInfo(modelName: string): Promise<MachineOilInfo> {
+export async function getMachineOilInfo(modelName: string): Promise<MachineOilInfo[]> {
   if (!API_KEY) {
     throw new Error('Gemini API key is missing. Please set GEMINI_API_KEY in your .env file.');
   }
 
   const prompt = `Máquina de costura: ${modelName}
-Responda SOMENTE em JSON válido, sem markdown, sem explicações:
-{"modelo":"nome completo","imageUrl":"URL pública ou null","intervaloHoras":número,"intervaloMeses":número,"pontosOleo":["lista"],"tipoOleo":"tipo","observacoes":"máximo 1 frase"}`;
+Liste até 10 modelos que correspondam à busca. Responda SOMENTE em um Array JSON válido, sem markdown, sem explicações:
+[{"modelo":"nome completo","imageUrl":"URL pública ou null","intervaloHoras":número,"intervaloMeses":número,"pontosOleo":["lista"],"tipoOleo":"tipo","observacoes":"máximo 1 frase"}]`;
 
   const response = await fetch(`${API_URL}?key=${API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 1500, responseMimeType: "application/json" }
+      generationConfig: { temperature: 0.1, maxOutputTokens: 4096, responseMimeType: "application/json" }
     })
   });
 
@@ -44,5 +44,11 @@ Responda SOMENTE em JSON válido, sem markdown, sem explicações:
 
   // Remove possíveis backticks de markdown que o modelo pode adicionar
   const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+  try {
+    const parsed = JSON.parse(clean);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch (err: any) {
+    console.error("Failed to parse Gemini response. Raw output:", text);
+    throw new Error(`Ocorreu um erro ao formatar os dados do Gemini. Tente novamente. (Erro: ${err.message})`);
+  }
 }

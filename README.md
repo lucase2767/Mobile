@@ -1,56 +1,138 @@
-# Welcome to your Expo app 👋
+# Cuidados Costura
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Um aplicativo mobile para gerenciar a manutenção e lubrificação de máquinas de costura. Descubra informações detalhadas sobre sua máquina, acompanhe prazos de manutenção e receba orientações sobre técnicas de lubrificação corretas.
 
-## Get started
+## Visão Geral
 
-1. Install dependencies
+**Cuidados Costura** é um app que combina armazenamento em cache e um banco de dados com pesquisa por IA que expande as capicidades do banco de dados, para oferecer informações precisas sobre manutenção.
 
-   ```bash
-   npm install
-   ```
+### Principais Características
 
-2. Start the app
+-  **Busca Inteligente**: Procure sua máquina de costura pelo modelo
+-  **Informações Detalhadas**: Obtenha dados sobre:
+  - Tipo de óleo recomendado
+  - Intervalo de lubrificação
+  - Pontos de lubrificação específicos
+  - Guia passo a passo de manutenção
+-  **Calendário de Manutenção**: Acompanhe as próximas datas de lubrificação
+-  **Histórico Local**: Acompanhe suas máquinas favoritas
+-  **Gerado por IA**: Quando não há dados no banco, a IA gera informações precisas
+-  **Modo Offline**: Acesso às máquinas previamente consultadas mesmo sem internet
 
-   ```bash
-   npx expo start
-   ```
 
-In the output, you'll find options to open the app in a
+## 📖 Como Usar
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 1. Tela Inicial (Home)
+- Procure pelo **modelo da sua máquina** na barra de pesquisa
+- Veja suas **máquinas rastreadas** na seção "Minhas Máquinas"
+- Clique no (X) para remover uma máquina da lista de rastreamento
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 2. Tela de Resultados
+- Visualize informações detalhadas sobre a máquina encontrada
+- O app mostra a **origem dos dados**:
+  -  **Cache local**: Consultada anteriormente
+  -  **Banco de dados**: Dados verificados
+  -  **Gerado por IA**: Criado por inteligência artificial
+- Clique em **"Ver datas de lubrificação"** para acompanhar a manutenção
 
-## Get a fresh project
+### 3. Calendário de Manutenção
+- Defina a **data da última lubrificação**
+- Veja as **próximas 4 datas** recomendadas
+- Acompanhe os **pontos de lubrificação** específicos da sua máquina
 
-When you're ready, run:
+## Estrutura do Projeto
 
-```bash
-npm run reset-project
+```
+cuidados-costura/
+├── app/                          # Telas e rotas da aplicação
+│   ├── _layout.tsx              # Layout base com navegação
+│   ├── index.tsx                # Tela inicial (Home)
+│   ├── resultado.tsx            # Tela de resultados da busca
+│   └── calendario.tsx           # Tela de calendário de manutenção
+│
+├── src/
+│   ├── components/              # Componentes reutilizáveis
+│   │   ├── MachineCard.tsx      # Card com informações da máquina
+│   │   ├── OilDateCard.tsx      # Card com datas de lubrificação
+│   │   ├── SearchBar.tsx        # Barra de pesquisa
+│   │   └── ...
+│   │
+│   ├── services/                # Lógica de negócio
+│   │   ├── geminiService.ts     # Integração com API Gemini (IA)
+│   │   ├── apiService.ts        # Integração com banco de dados
+│   │   ├── storageService.ts    # Armazenamento local (AsyncStorage)
+│   │   └── calendarService.ts   # Gerenciamento de datas
+│   │
+│   ├── hooks/                   # React hooks customizados
+│   ├── constants/               # Constantes da aplicação
+│   └── utils/                   # Funções utilitárias
+│
+├── assets/                      # Ícones e imagens
+├── __tests__/                   # Testes unitários
+├── package.json                 # Dependências do projeto
+├── app.json                     # Configuração do Expo
+└── tsconfig.json               # Configuração do TypeScript
+
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Arquitetura
 
-### Other setup steps
+### Fluxo de Dados
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```
+Usuário busca máquina
+         ↓
+    [Busca Rápida]
+         ↓
+   ┌─────┴─────┐
+   ↓           ↓
+Cache local?  Sim → Retorna dados em cache
+   Não        
+   ↓
+API/BD disponível?
+   ├─ Sim → Busca na API, salva em cache
+   │
+   ├─ Não → Usa Gemini (IA) para gerar dados
+   │        Salva em cache e sincroniza com API
+   │
+   └─ Erro → Mostra mensagem de erro
+```
 
-## Learn more
+### Serviços Principais
 
-To learn more about developing your project with Expo, look at the following resources:
+#### `geminiService.ts`
+- Integra a API Google Gemini para gerar informações sobre máquinas
+- Estrutura respostas no formato `MachineOilInfo`
+- Gera dados quando não há informações no banco de dados
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+#### `apiService.ts`
+- Comunica com backend para buscar e salvar dados de máquinas
+- Sincroniza informações geradas por IA com o banco central
+- Implementa cache em duas camadas
 
-## Join the community
+#### `storageService.ts`
+- Gerencia AsyncStorage para armazenamento local
+- Permite acesso offline aos dados
+- Mantém lista de máquinas rastreadas pelo usuário
 
-Join our community of developers creating universal apps.
+#### `calendarService.ts`
+- Gerencia cálculos de datas de manutenção
+- Baseado no intervalo recomendado (em meses)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Segurança
+
+- Dados sensíveis criptografados com **crypto-js**
+- Armazenamento local seguro com **AsyncStorage**
+- Requisições seguras com HTTPS
+- Sem armazenamento de senhas no dispositivo
+
+
+### TypeScript
+O projeto usa **TypeScript** para melhor experiência de desenvolvimento.
+
+### Offline-First
+O app funciona offline com dados previamente sincronizados:
+1. Cache local primeiro
+2. Sincronização automática quando online
+3. Suporta modo avião
